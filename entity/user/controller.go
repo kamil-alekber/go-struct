@@ -15,10 +15,7 @@ type controller struct {
 func (uc *controller) getUser(w http.ResponseWriter, req *http.Request) {
 	id := "123"
 	u := uc.service.GetUser(id)
-
 	val, _ := utils.Stringify(u)
-	vars := mux.Vars(req)
-	fmt.Println(vars["id"], vars["weather"])
 	io.WriteString(w, fmt.Sprintf("user: %s \n", val))
 }
 
@@ -32,10 +29,12 @@ func (uc *controller) getUsers(w http.ResponseWriter, r *http.Request) {
 
 func NewUserController(service UserService) mux.Router {
 	userController := controller{service}
+
 	var r mux.Router
-	// r.Get("/api/user", userController.getUser)
-	r.Get("/api/user/:id/after/:weather", userController.getUser)
-	r.Get("/api/users", userController.getUsers)
+	r.Prefix = "/api"
+	r.Get("/user", userController.getUser)
+	r.Get("/user/:id/after/:weather", userController.getUser)
+	r.Get("/users", userController.getUsers)
 
 	return r
 }
