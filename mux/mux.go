@@ -71,6 +71,9 @@ func (mux *mux) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 					if strings.HasPrefix(v, ":") {
 						hit = true
 						dynamicParts[v[1:]] = actualPathChunks[i]
+					} else if routerPathChunks[i] != actualPathChunks[i] {
+						hit = false
+						break
 					}
 				}
 
