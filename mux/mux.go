@@ -14,6 +14,10 @@ type mux struct {
 	middlewares []Middleware
 }
 
+const (
+	DynamicHeader = "vars"
+)
+
 func NewMultiplexer() *mux {
 	return &mux{}
 }
@@ -69,10 +73,10 @@ func (mux *mux) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 						dynamicParts[v[1:]] = actualPathChunks[i]
 					}
 				}
-				str, _ := utils.Stringify(dynamicParts)
-				req.Header.Add("vars", str)
 
 				if hit {
+					str, _ := utils.Stringify(dynamicParts)
+					req.Header.Add(DynamicHeader, str)
 					route.handler(w, req)
 					return
 				}
@@ -90,11 +94,15 @@ func (mux *mux) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 func Vars(req *http.Request) map[string]interface{} {
-	vars, _ := utils.Parse([]byte(req.Header.Get("vars")))
-	assertedVars, ok := vars.(map[string]interface{})
+	rawHeader := req.Header.Get(DynamicHeader)
 
-	if ok {
-		return assertedVars
+	if rawHeader != "" {
+		vars, _ := utils.Parse([]byte(req.Header.Get(DynamicHeader)))
+		assertedVars, ok := vars.(map[string]interface{})
+
+		if ok {
+			return assertedVars
+		}
 	}
 	return map[string]interface{}{}
 
