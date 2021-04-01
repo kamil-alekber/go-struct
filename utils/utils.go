@@ -5,7 +5,10 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"log"
+	"net/http"
 	"os"
 	"strings"
 
@@ -153,4 +156,40 @@ func B2S(bs [16]uint8) string {
 		b[i] = v
 	}
 	return hex.EncodeToString(b)
+}
+
+func SendFile(filename string, w http.ResponseWriter) {
+	cwd, _ := os.Getwd()
+	filepath := fmt.Sprintf("%s%s", cwd, filename)
+
+	file, err := os.Open(filepath)
+	if err != nil {
+		fmt.Printf("Error opening file: %s", err)
+	}
+
+	defer func() {
+		if err := file.Close(); err != nil {
+			fmt.Printf("Error closing file: %s", err)
+		}
+	}()
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	buf := make([]byte, 4*1024)
+	for {
+		n, err := file.Read(buf)
+		if n > 0 {
+			w.Write(buf[:n])
+		}
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Printf("read %d bytes: %v", n, err)
+			break
+		}
+	}
+
 }
